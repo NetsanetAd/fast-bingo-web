@@ -6,154 +6,102 @@
   <title>Fast 75 Bingo</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
-      padding: 20px;
+      font-family: sans-serif;
       text-align: center;
+      padding: 20px;
+      background: #f4f4f4;
     }
-
     h1 {
       color: #2c3e50;
     }
-
-    .info {
-      margin: 20px 0;
-      font-size: 1.1rem;
+    .wallet-info {
+      margin-bottom: 20px;
     }
-
-    .grid {
+    .card-grid {
       display: grid;
-      grid-template-columns: repeat(10, 1fr);
-      gap: 10px;
-      max-width: 600px;
-      margin: 20px auto;
+      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+      gap: 8px;
+      max-width: 500px;
+      margin: auto;
     }
-
     .card {
+      padding: 10px;
       background: white;
-      border: 2px solid #ccc;
+      border: 2px solid #3498db;
       border-radius: 8px;
-      padding: 20px 0;
       cursor: pointer;
-      font-weight: bold;
-      transition: all 0.2s;
     }
-
     .card.selected {
-      background: #2ecc71;
+      background: #3498db;
       color: white;
-      border-color: #27ae60;
     }
-
+    .buttons {
+      margin-top: 20px;
+    }
     button {
       padding: 10px 20px;
-      margin: 15px 10px;
-      font-size: 1rem;
+      font-size: 16px;
+      margin: 5px;
       border: none;
+      background: #2ecc71;
+      color: white;
       border-radius: 6px;
       cursor: pointer;
     }
-
-    #refreshBtn {
-      background-color: #f39c12;
-      color: white;
-    }
-
-    #startGameBtn {
-      background-color: #2980b9;
-      color: white;
-    }
-
-    .balls {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      margin-top: 20px;
-    }
-
-    .ball {
-      background: #e74c3c;
-      color: white;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 5px;
-      font-size: 1.1rem;
-      font-weight: bold;
+    button:hover {
+      background: #27ae60;
     }
   </style>
 </head>
 <body>
-
   <h1>Fast 75 Bingo</h1>
 
-  <div class="info">
-    <p><strong>Wallet:</strong> 120 ETB</p>
-    <p><strong>Stake:</strong> 10 ETB</p>
+  <div class="wallet-info">
+    <p><strong>Wallet:</strong> 100 birr</p>
     <p><strong>Active Games:</strong> 1</p>
+    <p><strong>Stake:</strong> 10 birr</p>
   </div>
 
-  <div>
-    <button id="refreshBtn">Refresh</button>
-    <button id="startGameBtn">Start Game</button>
+  <div class="card-grid" id="cardGrid"></div>
+
+  <div class="buttons">
+    <button onclick="refreshCards()">Refresh</button>
+    <button onclick="startGame()">Start Game</button>
   </div>
-
-  <div class="grid" id="cardGrid"></div>
-
-  <h2>Drawn Numbers</h2>
-  <div class="balls" id="drawnNumbers"></div>
 
   <script>
-    const cardGrid = document.getElementById('cardGrid');
-    const startGameBtn = document.getElementById('startGameBtn');
-    const refreshBtn = document.getElementById('refreshBtn');
-    const drawnNumbersEl = document.getElementById('drawnNumbers');
+    const cardGrid = document.getElementById("cardGrid");
 
     function generateCards() {
-      cardGrid.innerHTML = '';
+      cardGrid.innerHTML = "";
       for (let i = 1; i <= 100; i++) {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerText = `Card ${i}`;
-        card.addEventListener('click', () => {
-          card.classList.toggle('selected');
-        });
+        const card = document.createElement("div");
+        card.className = "card";
+        card.textContent = i;
+        card.onclick = () => {
+          card.classList.toggle("selected");
+        };
         cardGrid.appendChild(card);
       }
     }
 
-    function startBingoGame() {
-      drawnNumbersEl.innerHTML = '';
-      const drawn = [];
-      const interval = setInterval(() => {
-        if (drawn.length >= 75) {
-          clearInterval(interval);
-          alert("Game finished!");
-          return;
-        }
-        let num;
-        do {
-          num = Math.floor(Math.random() * 75) + 1;
-        } while (drawn.includes(num));
-        drawn.push(num);
-
-        const ball = document.createElement('div');
-        ball.className = 'ball';
-        ball.innerText = num;
-        drawnNumbersEl.appendChild(ball);
-      }, 1000);
+    function refreshCards() {
+      generateCards();
     }
 
-    refreshBtn.addEventListener('click', generateCards);
-    startGameBtn.addEventListener('click', () => {
-      alert("Game started!");
-      startBingoGame();
-    });
+    function startGame() {
+      const selected = document.querySelectorAll(".card.selected");
+      if (selected.length === 0) {
+        alert("Please select at least one card to start the game.");
+        return;
+      }
 
-    // Initial load
+      const selectedNumbers = Array.from(selected).map(c => c.textContent);
+      alert("Starting game with cards: " + selectedNumbers.join(", "));
+      // Add real game start logic here
+    }
+
+    // Initialize on page load
     generateCards();
   </script>
 </body>
