@@ -7,157 +7,154 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
-      background: #f9f9f9;
-      color: #333;
+      background: #f5f5f5;
       padding: 20px;
+      text-align: center;
     }
-    .top-bar {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 10px;
-      font-size: 16px;
-      background: #fff;
-      padding: 10px;
-      border-radius: 8px;
-      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+
+    h1 {
+      color: #2c3e50;
     }
+
+    .info {
+      margin: 20px 0;
+      font-size: 1.1rem;
+    }
+
     .grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 6px;
-      margin-bottom: 15px;
+      gap: 10px;
+      max-width: 600px;
+      margin: 20px auto;
     }
-    .card-btn {
-      background: #e4e4e4;
-      border: none;
-      padding: 10px;
-      font-weight: bold;
-      border-radius: 5px;
+
+    .card {
+      background: white;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      padding: 20px 0;
       cursor: pointer;
-    }
-    .card-btn:hover {
-      background: #ccc;
-    }
-    .selected-card {
-      background: #f1f1f1;
-      padding: 10px;
-      border-radius: 10px;
-      border: 2px solid #555;
-      margin-bottom: 20px;
-    }
-    .buttons {
-      display: flex;
-      justify-content: space-between;
-    }
-    .btn {
-      padding: 10px 16px;
-      border: none;
       font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .card.selected {
+      background: #2ecc71;
+      color: white;
+      border-color: #27ae60;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 15px 10px;
+      font-size: 1rem;
+      border: none;
       border-radius: 6px;
-      font-size: 16px;
       cursor: pointer;
-      flex: 1;
-      margin: 0 5px;
     }
-    .btn-refresh {
-      background-color: #007bff;
+
+    #refreshBtn {
+      background-color: #f39c12;
       color: white;
     }
-    .btn-start {
-      background-color: #dc3545;
+
+    #startGameBtn {
+      background-color: #2980b9;
       color: white;
     }
-    @media (max-width: 600px) {
-      .grid {
-        grid-template-columns: repeat(5, 1fr);
-      }
-      .btn {
-        font-size: 14px;
-      }
+
+    .balls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .ball {
+      background: #e74c3c;
+      color: white;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 5px;
+      font-size: 1.1rem;
+      font-weight: bold;
     }
   </style>
 </head>
 <body>
-  <div class="top-bar">
-    <div>Wallet: <strong id="wallet">100 ETB</strong></div>
-    <div>Active Games: <strong id="active">2</strong></div>
-    <div>Stake: <strong id="stake">10 ETB</strong></div>
+
+  <h1>Fast 75 Bingo</h1>
+
+  <div class="info">
+    <p><strong>Wallet:</strong> 120 ETB</p>
+    <p><strong>Stake:</strong> 10 ETB</p>
+    <p><strong>Active Games:</strong> 1</p>
   </div>
 
-  <div class="grid" id="card-grid"></div>
-
-  <div class="selected-card" id="selected-card">Tap a card to preview</div>
-
-  <div class="buttons">
-    <button class="btn btn-refresh" onclick="refreshCards()">Refresh</button>
-    <button class="btn btn-start" onclick="startGame()">Start Game</button>
+  <div>
+    <button id="refreshBtn">Refresh</button>
+    <button id="startGameBtn">Start Game</button>
   </div>
+
+  <div class="grid" id="cardGrid"></div>
+
+  <h2>Drawn Numbers</h2>
+  <div class="balls" id="drawnNumbers"></div>
 
   <script>
-    let selectedCardIndex = null;
+    const cardGrid = document.getElementById('cardGrid');
+    const startGameBtn = document.getElementById('startGameBtn');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const drawnNumbersEl = document.getElementById('drawnNumbers');
 
-    function generateCardNumbers(index) {
-      const card = [];
-      for (let i = 0; i < 5; i++) {
-        const col = [];
-        const start = i * 15 + 1;
-        const nums = Array.from({length: 15}, (_, j) => j + start);
-        for (let j = 0; j < 5; j++) {
-          col.push(nums.splice(Math.floor(Math.random() * nums.length), 1)[0]);
-        }
-        card.push(col.sort((a, b) => a - b));
-      }
-      card[2][2] = 'Free';
-      return card;
-    }
-
-    function displayCard(card) {
-      const rows = [];
-      for (let i = 0; i < 5; i++) {
-        const row = [];
-        for (let j = 0; j < 5; j++) {
-          const val = card[j][i];
-          row.push(val === 'Free' ? 'Free' : String(val).padStart(2, ' '));
-        }
-        rows.push(row.join(' | '));
-      }
-      return `<pre>B  I  N  G  O\n${rows.join('\n')}</pre>`;
-    }
-
-    function loadCards() {
-      const grid = document.getElementById('card-grid');
-      grid.innerHTML = "";
+    function generateCards() {
+      cardGrid.innerHTML = '';
       for (let i = 1; i <= 100; i++) {
-        const btn = document.createElement('button');
-        btn.textContent = i;
-        btn.className = 'card-btn';
-        btn.onclick = () => previewCard(i);
-        grid.appendChild(btn);
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerText = `Card ${i}`;
+        card.addEventListener('click', () => {
+          card.classList.toggle('selected');
+        });
+        cardGrid.appendChild(card);
       }
     }
 
-    function previewCard(index) {
-      selectedCardIndex = index;
-      const card = generateCardNumbers(index);
-      document.getElementById('selected-card').innerHTML =
-        `<strong>Card #${index}</strong><br>` + displayCard(card);
+    function startBingoGame() {
+      drawnNumbersEl.innerHTML = '';
+      const drawn = [];
+      const interval = setInterval(() => {
+        if (drawn.length >= 75) {
+          clearInterval(interval);
+          alert("Game finished!");
+          return;
+        }
+        let num;
+        do {
+          num = Math.floor(Math.random() * 75) + 1;
+        } while (drawn.includes(num));
+        drawn.push(num);
+
+        const ball = document.createElement('div');
+        ball.className = 'ball';
+        ball.innerText = num;
+        drawnNumbersEl.appendChild(ball);
+      }, 1000);
     }
 
-    function refreshCards() {
-      document.getElementById('selected-card').textContent = "Tap a card to preview";
-    }
+    refreshBtn.addEventListener('click', generateCards);
+    startGameBtn.addEventListener('click', () => {
+      alert("Game started!");
+      startBingoGame();
+    });
 
-    function startGame() {
-      if (!selectedCardIndex) {
-        alert("Please select a card first!");
-        return;
-      }
-      alert(`Game starting with Card #${selectedCardIndex}...`);
-    }
-
-    // Initialize cards on page load
-    loadCards();
+    // Initial load
+    generateCards();
   </script>
 </body>
 </html>
