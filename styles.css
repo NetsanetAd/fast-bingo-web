@@ -1,0 +1,27 @@
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #f9f9f9;
+}
+#card {
+  display: grid;
+  grid-template-columns: repeat(5, 60px);
+  gap: 5px;
+  justify-content: center;
+  margin: 20px;
+}
+.cell {
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 20px 0;
+  font-weight: bold;
+  border-radius: 8px;
+}
+.cell.free {
+  background: #ffcccb;
+}
+button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  font-size: 16px;
+}
