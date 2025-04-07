@@ -4,16 +4,160 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fast 75 Bingo</title>
-  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      color: #333;
+      padding: 20px;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+      font-size: 16px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 6px;
+      margin-bottom: 15px;
+    }
+    .card-btn {
+      background: #e4e4e4;
+      border: none;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .card-btn:hover {
+      background: #ccc;
+    }
+    .selected-card {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 10px;
+      border: 2px solid #555;
+      margin-bottom: 20px;
+    }
+    .buttons {
+      display: flex;
+      justify-content: space-between;
+    }
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      font-weight: bold;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+      flex: 1;
+      margin: 0 5px;
+    }
+    .btn-refresh {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-start {
+      background-color: #dc3545;
+      color: white;
+    }
+    @media (max-width: 600px) {
+      .grid {
+        grid-template-columns: repeat(5, 1fr);
+      }
+      .btn {
+        font-size: 14px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div id="app">
-    <h1>Fast 75 Bingo</h1>
-    <div id="card"></div>
-    <button id="draw">Draw Number</button>
-    <div id="drawn-number"></div>
-    <div id="history"></div>
+  <div class="top-bar">
+    <div>Wallet: <strong id="wallet">100 ETB</strong></div>
+    <div>Active Games: <strong id="active">2</strong></div>
+    <div>Stake: <strong id="stake">10 ETB</strong></div>
   </div>
-  <script src="main.js"></script>
+
+  <div class="grid" id="card-grid"></div>
+
+  <div class="selected-card" id="selected-card">Tap a card to preview</div>
+
+  <div class="buttons">
+    <button class="btn btn-refresh" onclick="refreshCards()">Refresh</button>
+    <button class="btn btn-start" onclick="startGame()">Start Game</button>
+  </div>
+
+  <script>
+    let selectedCardIndex = null;
+
+    function generateCardNumbers(index) {
+      const card = [];
+      for (let i = 0; i < 5; i++) {
+        const col = [];
+        const start = i * 15 + 1;
+        const nums = Array.from({length: 15}, (_, j) => j + start);
+        for (let j = 0; j < 5; j++) {
+          col.push(nums.splice(Math.floor(Math.random() * nums.length), 1)[0]);
+        }
+        card.push(col.sort((a, b) => a - b));
+      }
+      card[2][2] = 'Free';
+      return card;
+    }
+
+    function displayCard(card) {
+      const rows = [];
+      for (let i = 0; i < 5; i++) {
+        const row = [];
+        for (let j = 0; j < 5; j++) {
+          const val = card[j][i];
+          row.push(val === 'Free' ? 'Free' : String(val).padStart(2, ' '));
+        }
+        rows.push(row.join(' | '));
+      }
+      return `<pre>B  I  N  G  O\n${rows.join('\n')}</pre>`;
+    }
+
+    function loadCards() {
+      const grid = document.getElementById('card-grid');
+      grid.innerHTML = "";
+      for (let i = 1; i <= 100; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = 'card-btn';
+        btn.onclick = () => previewCard(i);
+        grid.appendChild(btn);
+      }
+    }
+
+    function previewCard(index) {
+      selectedCardIndex = index;
+      const card = generateCardNumbers(index);
+      document.getElementById('selected-card').innerHTML =
+        `<strong>Card #${index}</strong><br>` + displayCard(card);
+    }
+
+    function refreshCards() {
+      document.getElementById('selected-card').textContent = "Tap a card to preview";
+    }
+
+    function startGame() {
+      if (!selectedCardIndex) {
+        alert("Please select a card first!");
+        return;
+      }
+      alert(`Game starting with Card #${selectedCardIndex}...`);
+    }
+
+    // Initialize cards on page load
+    loadCards();
+  </script>
 </body>
 </html>
