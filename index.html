@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Fast 75 Bingo</title>
   <style>
     body {
@@ -42,6 +42,10 @@
       display: none;
       margin-top: 10px;
     }
+    .bingo-card table {
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
     .bingo-card td {
       width: 30px;
       height: 30px;
@@ -53,12 +57,8 @@
       cursor: pointer;
     }
     .bingo-card td.marked {
-      background-color: #FF5722;
-      color: white;
-    }
-    .drawn-numbers {
-      margin-top: 20px;
-      font-size: 16px;
+      background-color: #ffc107;
+      color: #000;
     }
     .buttons {
       margin-top: 20px;
@@ -90,7 +90,8 @@
 
   <div id="bingoDisplay" class="bingo-card"></div>
 
-  <div class="drawn-numbers" id="drawnNumbers">Drawn Numbers: </div>
+  <!-- Drawn numbers display -->
+  <p><strong>Drawn Numbers:</strong> <span id="drawnNumbersDisplay"></span></p>
 
   <div class="buttons">
     <button onclick="startGame()">Start Game</button>
@@ -98,9 +99,9 @@
   </div>
 
   <script>
-    let currentCard = null;
-    let drawInterval = null;
-    let drawn = [];
+    let selectedCard = null;
+    let drawnNumbers = [];
+    let drawInterval;
 
     function generateBingoCard() {
       const card = [];
@@ -120,7 +121,7 @@
         }
         card.push(nums);
       }
-      card[2][2] = '★';
+      card[2][2] = '★'; // Free space
       return card;
     }
 
@@ -131,7 +132,7 @@
         for (let col = 0; col < 5; col++) {
           const val = card[col][row];
           const cellId = `cell-${col}-${row}`;
-          html += `<td id="${cellId}" onclick="toggleMark(this)">${val}</td>`;
+          html += `<td id="${cellId}" onclick="markCell('${cellId}')">${val}</td>`;
         }
         html += '</tr>';
       }
@@ -139,8 +140,13 @@
       return html;
     }
 
-    function toggleMark(td) {
-      td.classList.toggle("marked");
+    function markCell(id) {
+      const cell = document.getElementById(id);
+      if (!cell.classList.contains('marked')) {
+        cell.classList.add('marked');
+      } else {
+        cell.classList.remove('marked');
+      }
     }
 
     const cardsGrid = document.getElementById("cardsGrid");
@@ -152,35 +158,29 @@
       btn.addEventListener("click", () => {
         document.querySelectorAll(".cards-grid button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-        currentCard = generateBingoCard();
-        bingoDisplay.innerHTML = renderBingoCard(currentCard);
+        selectedCard = generateBingoCard();
+        bingoDisplay.innerHTML = renderBingoCard(selectedCard);
         bingoDisplay.style.display = "block";
       });
       cardsGrid.appendChild(btn);
     }
 
     function startGame() {
-      if (!currentCard) {
-        alert("Please select a card first.");
-        return;
-      }
-
-      const allNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
-      drawn = [];
-      const drawnDisplay = document.getElementById("drawnNumbers");
-      drawnDisplay.innerHTML = "Drawn Numbers: ";
-
       if (drawInterval) clearInterval(drawInterval);
+      drawnNumbers = [];
+      const allNumbers = Array.from({ length: 75 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
+      const display = document.getElementById("drawnNumbersDisplay");
+
+      let index = 0;
       drawInterval = setInterval(() => {
-        if (allNumbers.length === 0) {
+        if (index >= allNumbers.length) {
           clearInterval(drawInterval);
           return;
         }
-        const index = Math.floor(Math.random() * allNumbers.length);
-        const number = allNumbers.splice(index, 1)[0];
-        drawn.push(number);
-        drawnDisplay.innerHTML = "Drawn Numbers: " + drawn.join(", ");
-      }, 2000);
+        drawnNumbers.push(allNumbers[index]);
+        display.textContent = drawnNumbers.join(", ");
+        index++;
+      }, 5000); // 5 seconds interval
     }
   </script>
 </body>
