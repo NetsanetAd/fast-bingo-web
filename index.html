@@ -19,21 +19,35 @@
     }
     .card-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
-      gap: 8px;
-      max-width: 500px;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      max-width: 800px;
       margin: auto;
     }
     .card {
-      padding: 10px;
       background: white;
       border: 2px solid #3498db;
       border-radius: 8px;
+      padding: 5px;
       cursor: pointer;
+      font-size: 12px;
     }
     .card.selected {
       background: #3498db;
       color: white;
+    }
+    .card table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .card th {
+      font-size: 10px;
+      background: #2980b9;
+      color: white;
+    }
+    .card td {
+      border: 1px solid #ccc;
+      padding: 2px;
     }
     .buttons {
       margin-top: 20px;
@@ -72,16 +86,64 @@
   <script>
     const cardGrid = document.getElementById("cardGrid");
 
+    function generateCardNumbers() {
+      const columns = [
+        [1, 15],
+        [16, 30],
+        [31, 45],
+        [46, 60],
+        [61, 75],
+      ];
+      const card = [];
+
+      for (let col = 0; col < 5; col++) {
+        const [min, max] = columns[col];
+        const nums = [];
+        while (nums.length < 5) {
+          const n = Math.floor(Math.random() * (max - min + 1)) + min;
+          if (!nums.includes(n)) nums.push(n);
+        }
+        card.push(nums);
+      }
+
+      card[2][2] = "FREE";
+      return card;
+    }
+
+    function createCardTable(numbers) {
+      const table = document.createElement("table");
+      const headerRow = document.createElement("tr");
+      "BINGO".split("").forEach(letter => {
+        const th = document.createElement("th");
+        th.textContent = letter;
+        headerRow.appendChild(th);
+      });
+      table.appendChild(headerRow);
+
+      for (let row = 0; row < 5; row++) {
+        const tr = document.createElement("tr");
+        for (let col = 0; col < 5; col++) {
+          const td = document.createElement("td");
+          td.textContent = numbers[col][row];
+          tr.appendChild(td);
+        }
+        table.appendChild(tr);
+      }
+
+      return table;
+    }
+
     function generateCards() {
       cardGrid.innerHTML = "";
-      for (let i = 1; i <= 100; i++) {
-        const card = document.createElement("div");
-        card.className = "card";
-        card.textContent = i;
-        card.onclick = () => {
-          card.classList.toggle("selected");
+      for (let i = 0; i < 100; i++) {
+        const cardData = generateCardNumbers();
+        const cardDiv = document.createElement("div");
+        cardDiv.className = "card";
+        cardDiv.appendChild(createCardTable(cardData));
+        cardDiv.onclick = () => {
+          cardDiv.classList.toggle("selected");
         };
-        cardGrid.appendChild(card);
+        cardGrid.appendChild(cardDiv);
       }
     }
 
@@ -95,13 +157,11 @@
         alert("Please select at least one card to start the game.");
         return;
       }
-
-      const selectedNumbers = Array.from(selected).map(c => c.textContent);
-      alert("Starting game with cards: " + selectedNumbers.join(", "));
-      // Add real game start logic here
+      alert(`Starting game with ${selected.length} selected card(s).`);
+      // Add logic to begin Bingo game with selected cards
     }
 
-    // Initialize on page load
+    // Initial load
     generateCards();
   </script>
 </body>
