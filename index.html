@@ -6,163 +6,135 @@
   <title>Fast 75 Bingo</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: Arial, sans-serif;
+      padding: 16px;
+      background-color: #f4f4f4;
       text-align: center;
-      padding: 20px;
-      background: #f4f4f4;
     }
     h1 {
-      color: #2c3e50;
+      margin-bottom: 10px;
     }
-    .wallet-info {
+    .info-box {
       margin-bottom: 20px;
+      font-size: 16px;
     }
-    .card-grid {
+    .cards-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 10px;
-      max-width: 800px;
-      margin: auto;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 8px;
+      max-width: 600px;
+      margin: 0 auto 20px;
     }
-    .card {
-      background: white;
-      border: 2px solid #3498db;
+    .card-button {
+      padding: 10px;
+      background-color: #008CBA;
+      color: white;
+      border: none;
       border-radius: 8px;
-      padding: 5px;
       cursor: pointer;
-      font-size: 12px;
+      font-weight: bold;
     }
-    .card.selected {
-      background: #3498db;
-      color: white;
+    .card-button:hover {
+      background-color: #005f73;
     }
-    .card table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .card th {
-      font-size: 10px;
-      background: #2980b9;
-      color: white;
-    }
-    .card td {
-      border: 1px solid #ccc;
-      padding: 2px;
-    }
-    .buttons {
+    .bingo-card-preview {
       margin-top: 20px;
     }
-    button {
-      padding: 10px 20px;
-      font-size: 16px;
-      margin: 5px;
-      border: none;
-      background: #2ecc71;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 10px;
     }
-    button:hover {
-      background: #27ae60;
+    .bingo-cell {
+      padding: 10px;
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+    .start-button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      background-color: green;
+      color: white;
+      font-size: 16px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
+
   <h1>Fast 75 Bingo</h1>
 
-  <div class="wallet-info">
-    <p><strong>Wallet:</strong> 100 birr</p>
-    <p><strong>Active Games:</strong> 1</p>
-    <p><strong>Stake:</strong> 10 birr</p>
+  <div class="info-box">
+    Wallet: <strong>ETB 50</strong> |
+    Stake: <strong>ETB 10</strong> |
+    Active Game: <strong>#1234</strong>
   </div>
 
-  <div class="card-grid" id="cardGrid"></div>
+  <div class="cards-grid" id="cardsGrid"></div>
 
-  <div class="buttons">
-    <button onclick="refreshCards()">Refresh</button>
-    <button onclick="startGame()">Start Game</button>
-  </div>
+  <div class="bingo-card-preview" id="bingoCardPreview"></div>
+
+  <button class="start-button" onclick="startGame()">Start Game</button>
 
   <script>
-    const cardGrid = document.getElementById("cardGrid");
-
+    // Generate random bingo card numbers
     function generateCardNumbers() {
-      const columns = [
-        [1, 15],
-        [16, 30],
-        [31, 45],
-        [46, 60],
-        [61, 75],
-      ];
       const card = [];
-
-      for (let col = 0; col < 5; col++) {
-        const [min, max] = columns[col];
-        const nums = [];
-        while (nums.length < 5) {
-          const n = Math.floor(Math.random() * (max - min + 1)) + min;
-          if (!nums.includes(n)) nums.push(n);
+      const ranges = [
+        { start: 1, end: 15 },
+        { start: 16, end: 30 },
+        { start: 31, end: 45 },
+        { start: 46, end: 60 },
+        { start: 61, end: 75 },
+      ];
+      for (let i = 0; i < 5; i++) {
+        const col = [];
+        while (col.length < 5) {
+          const num = Math.floor(Math.random() * (ranges[i].end - ranges[i].start + 1)) + ranges[i].start;
+          if (!col.includes(num)) col.push(num);
         }
-        card.push(nums);
+        card.push(col);
       }
-
-      card[2][2] = "FREE";
+      card[2][2] = 'FREE';
       return card;
     }
 
-    function createCardTable(numbers) {
-      const table = document.createElement("table");
-      const headerRow = document.createElement("tr");
-      "BINGO".split("").forEach(letter => {
-        const th = document.createElement("th");
-        th.textContent = letter;
-        headerRow.appendChild(th);
-      });
-      table.appendChild(headerRow);
+    const cardsData = Array.from({ length: 100 }, () => generateCardNumbers());
 
-      for (let row = 0; row < 5; row++) {
-        const tr = document.createElement("tr");
-        for (let col = 0; col < 5; col++) {
-          const td = document.createElement("td");
-          td.textContent = numbers[col][row];
-          tr.appendChild(td);
-        }
-        table.appendChild(tr);
-      }
+    const cardsGrid = document.getElementById("cardsGrid");
+    const bingoCardPreview = document.getElementById("bingoCardPreview");
 
-      return table;
-    }
-
-    function generateCards() {
-      cardGrid.innerHTML = "";
+    function renderCards() {
+      cardsGrid.innerHTML = "";
       for (let i = 0; i < 100; i++) {
-        const cardData = generateCardNumbers();
-        const cardDiv = document.createElement("div");
-        cardDiv.className = "card";
-        cardDiv.appendChild(createCardTable(cardData));
-        cardDiv.onclick = () => {
-          cardDiv.classList.toggle("selected");
-        };
-        cardGrid.appendChild(cardDiv);
+        const btn = document.createElement("button");
+        btn.className = "card-button";
+        btn.textContent = `Card ${i + 1}`;
+        btn.onclick = () => showCard(i);
+        cardsGrid.appendChild(btn);
       }
     }
 
-    function refreshCards() {
-      generateCards();
+    function showCard(index) {
+      const card = cardsData[index];
+      bingoCardPreview.innerHTML = `<h3>Card ${index + 1}</h3><div class="bingo-grid">${card
+        .map(col => col.map(num =>
+          `<div class="bingo-cell">${num}</div>`).join('')
+        ).join('')}</div>`;
     }
 
     function startGame() {
-      const selected = document.querySelectorAll(".card.selected");
-      if (selected.length === 0) {
-        alert("Please select at least one card to start the game.");
-        return;
-      }
-      alert(`Starting game with ${selected.length} selected card(s).`);
-      // Add logic to begin Bingo game with selected cards
+      alert("Game started! Good luck!");
+      // Add real game logic here if needed
     }
 
-    // Initial load
-    generateCards();
+    renderCards();
   </script>
+
 </body>
 </html>
