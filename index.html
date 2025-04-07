@@ -6,154 +6,144 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background-color: #fff;
-      margin: 0;
-      padding: 20px;
+      padding: 10px;
+      background: #f0f0f0;
       text-align: center;
     }
-
     h1 {
       margin-bottom: 10px;
     }
-
-    .wallet-info {
-      margin: 10px 0;
-      font-size: 16px;
+    .info {
+      margin-bottom: 20px;
     }
-
-    .card-grid {
+    .cards-grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 5px;
-      max-width: 600px;
-      margin: 20px auto;
+      gap: 4px;
+      max-width: 400px;
+      margin: 0 auto 20px;
     }
-
-    .card-button {
-      padding: 10px;
+    .cards-grid button {
+      padding: 6px;
       font-size: 14px;
+      background-color: #fff;
+      border: 2px solid #007bff;
+      color: #007bff;
+      border-radius: 5px;
       cursor: pointer;
-      border: 2px solid #333;
-      border-radius: 6px;
-      background-color: #f1f1f1;
+      width: 100%;
+      height: 36px;
     }
-
-    .card-button.selected {
-      background-color: #ff3399;
-      color: white;
+    .cards-grid button.active {
+      background-color: #007bff;
+      color: #fff;
     }
-
-    .controls {
-      margin-top: 20px;
+    .bingo-card {
+      display: none;
+      margin-top: 10px;
     }
-
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      background-color: #28a745;
-      border: none;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background-color: #218838;
-    }
-
-    .card-preview {
-      margin-top: 20px;
-    }
-
-    table {
-      border-collapse: collapse;
+    .bingo-card table {
       margin: 0 auto;
+      border-collapse: collapse;
     }
-
-    td {
+    .bingo-card td {
       width: 30px;
       height: 30px;
       border: 1px solid #999;
       text-align: center;
       font-weight: bold;
+      background-color: #fff;
+      font-size: 12px;
+    }
+    .buttons {
+      margin-top: 20px;
+    }
+    .buttons button {
+      margin: 0 8px;
+      padding: 8px 16px;
+      font-size: 14px;
+      border: none;
+      border-radius: 5px;
+      background-color: #28a745;
+      color: #fff;
+      cursor: pointer;
+    }
+    .buttons button.refresh {
+      background-color: #ffc107;
+      color: #000;
     }
   </style>
 </head>
 <body>
   <h1>Fast 75 Bingo</h1>
-  <div class="wallet-info">
-    Wallet: 100 ETB | Stake: 5 ETB
+
+  <div class="info">
+    <p><strong>Wallet:</strong> 100 ETB | <strong>Stake:</strong> 10 ETB</p>
   </div>
 
-  <div class="card-grid" id="cardGrid"></div>
+  <div class="cards-grid" id="cardsGrid"></div>
 
-  <div class="controls">
+  <div id="bingoDisplay" class="bingo-card"></div>
+
+  <div class="buttons">
     <button onclick="startGame()">Start Game</button>
+    <button class="refresh" onclick="location.reload()">Refresh</button>
   </div>
-
-  <div class="card-preview" id="cardPreview"></div>
 
   <script>
-    const cardGrid = document.getElementById("cardGrid");
-    const cardPreview = document.getElementById("cardPreview");
-    let selectedCard = null;
-
-    function generateCard() {
+    function generateBingoCard() {
+      const card = [];
       const columns = {
         B: [1, 15],
         I: [16, 30],
         N: [31, 45],
         G: [46, 60],
-        O: [61, 75]
+        O: [61, 75],
       };
-      const card = [];
-      for (let key in columns) {
-        const [min, max] = columns[key];
+      for (const key in columns) {
+        const [start, end] = columns[key];
         const nums = [];
         while (nums.length < 5) {
-          let n = Math.floor(Math.random() * (max - min + 1)) + min;
-          if (!nums.includes(n)) nums.push(n);
+          const num = Math.floor(Math.random() * (end - start + 1)) + start;
+          if (!nums.includes(num)) nums.push(num);
         }
         card.push(nums);
       }
-      card[2][2] = "★";
+      card[2][2] = '★'; // Free space
       return card;
     }
 
-    const bingoCards = [];
-
-    for (let i = 1; i <= 100; i++) {
-      const card = generateCard();
-      bingoCards.push(card);
-      const btn = document.createElement("button");
-      btn.textContent = i;
-      btn.className = "card-button";
-      btn.onclick = () => {
-        document.querySelectorAll(".card-button").forEach(b => b.classList.remove("selected"));
-        btn.classList.add("selected");
-        selectedCard = card;
-        showCardPreview(card);
-      };
-      cardGrid.appendChild(btn);
+    function renderBingoCard(card) {
+      let html = '<table>';
+      for (let row = 0; row < 5; row++) {
+        html += '<tr>';
+        for (let col = 0; col < 5; col++) {
+          html += `<td>${card[col][row]}</td>`;
+        }
+        html += '</tr>';
+      }
+      html += '</table>';
+      return html;
     }
 
-    function showCardPreview(card) {
-      cardPreview.innerHTML = "";
-      const table = document.createElement("table");
-      for (let r = 0; r < 5; r++) {
-        const row = document.createElement("tr");
-        for (let c = 0; c < 5; c++) {
-          const cell = document.createElement("td");
-          cell.textContent = card[c][r];
-          row.appendChild(cell);
-        }
-        table.appendChild(row);
-      }
-      cardPreview.appendChild(table);
+    const cardsGrid = document.getElementById("cardsGrid");
+    const bingoDisplay = document.getElementById("bingoDisplay");
+
+    for (let i = 1; i <= 100; i++) {
+      const btn = document.createElement("button");
+      btn.textContent = i;
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".cards-grid button").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        const card = generateBingoCard();
+        bingoDisplay.innerHTML = renderBingoCard(card);
+        bingoDisplay.style.display = "block";
+      });
+      cardsGrid.appendChild(btn);
     }
 
     function startGame() {
-      window.open("game.html", "_blank");
+      alert("Game started! Numbers will be drawn...");
     }
   </script>
 </body>
