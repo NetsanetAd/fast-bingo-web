@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Telebirr Payment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: auto;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    input, button {
+      margin: 10px 0;
+      padding: 10px;
+      width: 100%;
+      font-size: 16px;
+    }
+    button {
+      background: #0080ff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+    .countdown {
+      font-weight: bold;
+      color: red;
+    }
+    .success {
+      background: #d4edda;
+      padding: 15px;
+      border-radius: 8px;
+      color: #155724;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Pay with Telebirr</h2>
+    <p><strong>Amount to Pay:</strong> <span id="amount">ETB 0</span></p>
+    <p><strong>Mobile Number:</strong></p>
+    <input type="text" id="phone" placeholder="0912345678" />
+
+    <button onclick="startPayment()">Pay with Telebirr</button>
+
+    <div id="payment-area" style="display:none;">
+      <p class="countdown">Expires in: <span id="timer">05:00</span></p>
+      <p>Please insert your Telebirr PIN on your phone, then enter it below:</p>
+      <input type="password" id="pin" placeholder="Enter Telebirr PIN" />
+      <button onclick="confirmPayment()">Confirm Payment</button>
+    </div>
+
+    <div id="success-msg" class="success" style="display:none;">
+      Payment successful! Your wallet will be updated.
+    </div>
+  </div>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const amount = urlParams.get('amount') || "0";
+    const phone = urlParams.get('phone') || "";
+
+    document.getElementById("amount").textContent = `ETB ${amount}`;
+    document.getElementById("phone").value = phone;
+
+    function startPayment() {
+      document.getElementById("payment-area").style.display = 'block';
+      startCountdown(5 * 60);
+    }
+
+    function startCountdown(seconds) {
+      const timer = document.getElementById("timer");
+      const interval = setInterval(() => {
+        const min = Math.floor(seconds / 60);
+        const sec = seconds % 60;
+        timer.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        if (seconds-- <= 0) {
+          clearInterval(interval);
+          alert("Payment session expired!");
+        }
+      }, 1000);
+    }
+
+    function confirmPayment() {
+      const pin = document.getElementById("pin").value;
+      if (pin.length >= 4) {
+        document.getElementById("success-msg").style.display = 'block';
+        setTimeout(() => {
+          window.close();
+        }, 3000);
+      } else {
+        alert("Invalid PIN. Please enter at least 4 digits.");
+      }
+    }
+  </script>
+</body>
+</html>
