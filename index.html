@@ -1,150 +1,147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Fast 75 Bingo</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fetan Bingo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+      margin: 0;
       padding: 10px;
-      background: #f0f0f0;
       text-align: center;
     }
-    h1 {
-      margin-bottom: 10px;
-    }
-    .info {
-      margin-bottom: 20px;
-    }
-    .cards-grid {
+    .card-grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 4px;
-      max-width: 400px;
-      margin: 0 auto 20px;
+      gap: 6px;
+      margin-bottom: 20px;
     }
-    .cards-grid button {
-      padding: 6px;
-      font-size: 14px;
-      background-color: #fff;
-      border: 2px solid #007bff;
-      color: #007bff;
-      border-radius: 5px;
-      cursor: pointer;
-      width: 100%;
-      height: 36px;
-    }
-    .cards-grid button.active {
-      background-color: #007bff;
-      color: #fff;
-    }
-    .bingo-card {
-      display: none;
-      margin-top: 10px;
-    }
-    .bingo-card table {
-      margin: 0 auto;
-      border-collapse: collapse;
-    }
-    .bingo-card td {
-      width: 30px;
-      height: 30px;
-      border: 1px solid #999;
-      text-align: center;
-      font-weight: bold;
-      background-color: #fff;
+    .card-button {
+      padding: 10px;
       font-size: 12px;
+      border: none;
+      border-radius: 6px;
+      background-color: #444;
+      color: #fff;
+      cursor: pointer;
     }
-    .buttons {
+    .card-button:hover {
+      background-color: #666;
+    }
+    .bingo-grid {
+      display: none;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin: 10px auto;
+      width: 250px;
+    }
+    .bingo-number {
+      padding: 16px;
+      font-size: 18px;
+      border: 2px solid #444;
+      border-radius: 8px;
+      background-color: #222;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    .bingo-number.highlighted {
+      background-color: #00ff88;
+      color: #000;
+      box-shadow: 0 0 10px #00ff88;
+      font-weight: bold;
+    }
+    .controls {
       margin-top: 20px;
     }
-    .buttons button {
-      margin: 0 8px;
-      padding: 8px 16px;
-      font-size: 14px;
+    button {
+      padding: 10px 18px;
+      font-size: 16px;
       border: none;
-      border-radius: 5px;
-      background-color: #28a745;
-      color: #fff;
+      border-radius: 8px;
       cursor: pointer;
+      background-color: #00b894;
+      color: white;
+      margin: 5px;
     }
-    .buttons button.refresh {
-      background-color: #ffc107;
-      color: #000;
+    button:hover {
+      background-color: #019875;
     }
   </style>
 </head>
 <body>
-  <h1>Fast 75 Bingo</h1>
-
-  <div class="info">
-    <p><strong>Wallet:</strong> 100 ETB | <strong>Stake:</strong> 10 ETB</p>
-  </div>
-
-  <div class="cards-grid" id="cardsGrid"></div>
-
-  <div id="bingoDisplay" class="bingo-card"></div>
-
-  <div class="buttons">
+  <h2>Fetan Bingo</h2>
+  <div class="controls">
     <button onclick="startGame()">Start Game</button>
-    <button class="refresh" onclick="location.reload()">Refresh</button>
   </div>
+
+  <div id="cardGrid" class="card-grid"></div>
+  <div id="bingoPreview" class="bingo-grid"></div>
 
   <script>
+    const cardGrid = document.getElementById("cardGrid");
+    const bingoPreview = document.getElementById("bingoPreview");
+    let selectedCardIndex = null;
+    let cards = [];
+
     function generateBingoCard() {
       const card = [];
-      const columns = {
-        B: [1, 15],
-        I: [16, 30],
-        N: [31, 45],
-        G: [46, 60],
-        O: [61, 75],
-      };
-      for (const key in columns) {
-        const [start, end] = columns[key];
+      const ranges = [
+        [1, 15],
+        [16, 30],
+        [31, 45],
+        [46, 60],
+        [61, 75]
+      ];
+
+      for (let col = 0; col < 5; col++) {
+        const [min, max] = ranges[col];
         const nums = [];
         while (nums.length < 5) {
-          const num = Math.floor(Math.random() * (end - start + 1)) + start;
+          const num = Math.floor(Math.random() * (max - min + 1)) + min;
           if (!nums.includes(num)) nums.push(num);
         }
-        card.push(nums);
+        card.push(...nums);
       }
-      card[2][2] = '★'; // Free space
+      card[12] = "FREE";
       return card;
     }
 
-    function renderBingoCard(card) {
-      let html = '<table>';
-      for (let row = 0; row < 5; row++) {
-        html += '<tr>';
-        for (let col = 0; col < 5; col++) {
-          html += `<td>${card[col][row]}</td>`;
-        }
-        html += '</tr>';
+    function createCardButtons() {
+      for (let i = 0; i < 100; i++) {
+        const btn = document.createElement("button");
+        btn.className = "card-button";
+        btn.innerText = i + 1;
+        btn.onclick = () => showCard(i);
+        cardGrid.appendChild(btn);
+        cards.push(generateBingoCard());
       }
-      html += '</table>';
-      return html;
     }
 
-    const cardsGrid = document.getElementById("cardsGrid");
-    const bingoDisplay = document.getElementById("bingoDisplay");
+    function showCard(index) {
+      selectedCardIndex = index;
+      bingoPreview.innerHTML = "";
+      const numbers = cards[index];
 
-    for (let i = 1; i <= 100; i++) {
-      const btn = document.createElement("button");
-      btn.textContent = i;
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".cards-grid button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        const card = generateBingoCard();
-        bingoDisplay.innerHTML = renderBingoCard(card);
-        bingoDisplay.style.display = "block";
+      bingoPreview.style.display = "grid";
+      numbers.forEach((num, i) => {
+        const div = document.createElement("div");
+        div.className = "bingo-number";
+        div.innerText = num;
+        div.onclick = () => {
+          div.classList.toggle("highlighted");
+        };
+        bingoPreview.appendChild(div);
       });
-      cardsGrid.appendChild(btn);
     }
 
     function startGame() {
-      alert("Game started! Numbers will be drawn...");
+      alert("Game started! Select a card to begin playing.");
     }
+
+    createCardButtons();
   </script>
 </body>
 </html>
