@@ -42,10 +42,6 @@
       display: none;
       margin-top: 10px;
     }
-    .bingo-card table {
-      margin: 0 auto;
-      border-collapse: collapse;
-    }
     .bingo-card td {
       width: 30px;
       height: 30px;
@@ -55,11 +51,14 @@
       background-color: #fff;
       font-size: 12px;
       cursor: pointer;
-      user-select: none;
     }
-    .bingo-card td.highlighted {
-      background-color: #28a745;
-      color: #fff;
+    .bingo-card td.marked {
+      background-color: #FF5722;
+      color: white;
+    }
+    .drawn-numbers {
+      margin-top: 20px;
+      font-size: 16px;
     }
     .buttons {
       margin-top: 20px;
@@ -91,12 +90,18 @@
 
   <div id="bingoDisplay" class="bingo-card"></div>
 
+  <div class="drawn-numbers" id="drawnNumbers">Drawn Numbers: </div>
+
   <div class="buttons">
     <button onclick="startGame()">Start Game</button>
     <button class="refresh" onclick="location.reload()">Refresh</button>
   </div>
 
   <script>
+    let currentCard = null;
+    let drawInterval = null;
+    let drawn = [];
+
     function generateBingoCard() {
       const card = [];
       const columns = {
@@ -115,7 +120,7 @@
         }
         card.push(nums);
       }
-      card[2][2] = '★'; // Free space
+      card[2][2] = '★';
       return card;
     }
 
@@ -124,9 +129,9 @@
       for (let row = 0; row < 5; row++) {
         html += '<tr>';
         for (let col = 0; col < 5; col++) {
-          const value = card[col][row];
+          const val = card[col][row];
           const cellId = `cell-${col}-${row}`;
-          html += `<td id="${cellId}" onclick="toggleHighlight('${cellId}')">${value}</td>`;
+          html += `<td id="${cellId}" onclick="toggleMark(this)">${val}</td>`;
         }
         html += '</tr>';
       }
@@ -134,11 +139,8 @@
       return html;
     }
 
-    function toggleHighlight(cellId) {
-      const cell = document.getElementById(cellId);
-      if (cell && cell.textContent !== '★') {
-        cell.classList.toggle("highlighted");
-      }
+    function toggleMark(td) {
+      td.classList.toggle("marked");
     }
 
     const cardsGrid = document.getElementById("cardsGrid");
@@ -150,15 +152,35 @@
       btn.addEventListener("click", () => {
         document.querySelectorAll(".cards-grid button").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-        const card = generateBingoCard();
-        bingoDisplay.innerHTML = renderBingoCard(card);
+        currentCard = generateBingoCard();
+        bingoDisplay.innerHTML = renderBingoCard(currentCard);
         bingoDisplay.style.display = "block";
       });
       cardsGrid.appendChild(btn);
     }
 
     function startGame() {
-      alert("Game started! Numbers will be drawn...");
+      if (!currentCard) {
+        alert("Please select a card first.");
+        return;
+      }
+
+      const allNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+      drawn = [];
+      const drawnDisplay = document.getElementById("drawnNumbers");
+      drawnDisplay.innerHTML = "Drawn Numbers: ";
+
+      if (drawInterval) clearInterval(drawInterval);
+      drawInterval = setInterval(() => {
+        if (allNumbers.length === 0) {
+          clearInterval(drawInterval);
+          return;
+        }
+        const index = Math.floor(Math.random() * allNumbers.length);
+        const number = allNumbers.splice(index, 1)[0];
+        drawn.push(number);
+        drawnDisplay.innerHTML = "Drawn Numbers: " + drawn.join(", ");
+      }, 2000);
     }
   </script>
 </body>
