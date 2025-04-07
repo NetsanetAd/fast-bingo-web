@@ -1,186 +1,159 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Fast 75 Bingo</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      padding: 10px;
-      background: #f0f0f0;
+      background-color: #fff;
+      margin: 0;
+      padding: 20px;
       text-align: center;
     }
+
     h1 {
       margin-bottom: 10px;
     }
-    .info {
-      margin-bottom: 20px;
+
+    .wallet-info {
+      margin: 10px 0;
+      font-size: 16px;
     }
-    .cards-grid {
+
+    .card-grid {
       display: grid;
       grid-template-columns: repeat(10, 1fr);
-      gap: 4px;
-      max-width: 400px;
-      margin: 0 auto 20px;
+      gap: 5px;
+      max-width: 600px;
+      margin: 20px auto;
     }
-    .cards-grid button {
-      padding: 6px;
+
+    .card-button {
+      padding: 10px;
       font-size: 14px;
-      background-color: #fff;
-      border: 2px solid #007bff;
-      color: #007bff;
-      border-radius: 5px;
       cursor: pointer;
-      width: 100%;
-      height: 36px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background-color: #f1f1f1;
     }
-    .cards-grid button.active {
-      background-color: #007bff;
-      color: #fff;
+
+    .card-button.selected {
+      background-color: #ff3399;
+      color: white;
     }
-    .bingo-card {
-      display: none;
-      margin-top: 10px;
+
+    .controls {
+      margin-top: 20px;
     }
-    .bingo-card table {
-      margin: 0 auto;
+
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background-color: #28a745;
+      border: none;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #218838;
+    }
+
+    .card-preview {
+      margin-top: 20px;
+    }
+
+    table {
       border-collapse: collapse;
+      margin: 0 auto;
     }
-    .bingo-card td {
+
+    td {
       width: 30px;
       height: 30px;
       border: 1px solid #999;
       text-align: center;
       font-weight: bold;
-      background-color: #fff;
-      font-size: 12px;
-      cursor: pointer;
-    }
-    .bingo-card td.marked {
-      background-color: #ffc107;
-      color: #000;
-    }
-    .buttons {
-      margin-top: 20px;
-    }
-    .buttons button {
-      margin: 0 8px;
-      padding: 8px 16px;
-      font-size: 14px;
-      border: none;
-      border-radius: 5px;
-      background-color: #28a745;
-      color: #fff;
-      cursor: pointer;
-    }
-    .buttons button.refresh {
-      background-color: #ffc107;
-      color: #000;
     }
   </style>
 </head>
 <body>
   <h1>Fast 75 Bingo</h1>
-
-  <div class="info">
-    <p><strong>Wallet:</strong> 100 ETB | <strong>Stake:</strong> 10 ETB</p>
+  <div class="wallet-info">
+    Wallet: 100 ETB | Stake: 5 ETB
   </div>
 
-  <div class="cards-grid" id="cardsGrid"></div>
+  <div class="card-grid" id="cardGrid"></div>
 
-  <div id="bingoDisplay" class="bingo-card"></div>
-
-  <!-- Drawn numbers display -->
-  <p><strong>Drawn Numbers:</strong> <span id="drawnNumbersDisplay"></span></p>
-
-  <div class="buttons">
+  <div class="controls">
     <button onclick="startGame()">Start Game</button>
-    <button class="refresh" onclick="location.reload()">Refresh</button>
   </div>
+
+  <div class="card-preview" id="cardPreview"></div>
 
   <script>
+    const cardGrid = document.getElementById("cardGrid");
+    const cardPreview = document.getElementById("cardPreview");
     let selectedCard = null;
-    let drawnNumbers = [];
-    let drawInterval;
 
-    function generateBingoCard() {
-      const card = [];
+    function generateCard() {
       const columns = {
         B: [1, 15],
         I: [16, 30],
         N: [31, 45],
         G: [46, 60],
-        O: [61, 75],
+        O: [61, 75]
       };
-      for (const key in columns) {
-        const [start, end] = columns[key];
+      const card = [];
+      for (let key in columns) {
+        const [min, max] = columns[key];
         const nums = [];
         while (nums.length < 5) {
-          const num = Math.floor(Math.random() * (end - start + 1)) + start;
-          if (!nums.includes(num)) nums.push(num);
+          let n = Math.floor(Math.random() * (max - min + 1)) + min;
+          if (!nums.includes(n)) nums.push(n);
         }
         card.push(nums);
       }
-      card[2][2] = '★'; // Free space
+      card[2][2] = "★";
       return card;
     }
 
-    function renderBingoCard(card) {
-      let html = '<table>';
-      for (let row = 0; row < 5; row++) {
-        html += '<tr>';
-        for (let col = 0; col < 5; col++) {
-          const val = card[col][row];
-          const cellId = `cell-${col}-${row}`;
-          html += `<td id="${cellId}" onclick="markCell('${cellId}')">${val}</td>`;
-        }
-        html += '</tr>';
-      }
-      html += '</table>';
-      return html;
-    }
-
-    function markCell(id) {
-      const cell = document.getElementById(id);
-      if (!cell.classList.contains('marked')) {
-        cell.classList.add('marked');
-      } else {
-        cell.classList.remove('marked');
-      }
-    }
-
-    const cardsGrid = document.getElementById("cardsGrid");
-    const bingoDisplay = document.getElementById("bingoDisplay");
+    const bingoCards = [];
 
     for (let i = 1; i <= 100; i++) {
+      const card = generateCard();
+      bingoCards.push(card);
       const btn = document.createElement("button");
       btn.textContent = i;
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".cards-grid button").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        selectedCard = generateBingoCard();
-        bingoDisplay.innerHTML = renderBingoCard(selectedCard);
-        bingoDisplay.style.display = "block";
-      });
-      cardsGrid.appendChild(btn);
+      btn.className = "card-button";
+      btn.onclick = () => {
+        document.querySelectorAll(".card-button").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+        selectedCard = card;
+        showCardPreview(card);
+      };
+      cardGrid.appendChild(btn);
+    }
+
+    function showCardPreview(card) {
+      cardPreview.innerHTML = "";
+      const table = document.createElement("table");
+      for (let r = 0; r < 5; r++) {
+        const row = document.createElement("tr");
+        for (let c = 0; c < 5; c++) {
+          const cell = document.createElement("td");
+          cell.textContent = card[c][r];
+          row.appendChild(cell);
+        }
+        table.appendChild(row);
+      }
+      cardPreview.appendChild(table);
     }
 
     function startGame() {
-      if (drawInterval) clearInterval(drawInterval);
-      drawnNumbers = [];
-      const allNumbers = Array.from({ length: 75 }, (_, i) => i + 1).sort(() => Math.random() - 0.5);
-      const display = document.getElementById("drawnNumbersDisplay");
-
-      let index = 0;
-      drawInterval = setInterval(() => {
-        if (index >= allNumbers.length) {
-          clearInterval(drawInterval);
-          return;
-        }
-        drawnNumbers.push(allNumbers[index]);
-        display.textContent = drawnNumbers.join(", ");
-        index++;
-      }, 5000); // 5 seconds interval
+      window.open("game.html", "_blank");
     }
   </script>
 </body>
