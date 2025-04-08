@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Bingo Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #e3f2fd;
+      text-align: center;
+      padding: 20px;
+    }
+    h2 {
+      margin-bottom: 10px;
+    }
+    .wallet-stake {
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+    .bingo-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 60px);
+      grid-gap: 5px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .bingo-cell {
+      width: 60px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: white;
+      border: 2px solid #1976d2;
+      border-radius: 8px;
+      font-size: 18px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .bingo-cell.highlight {
+      background-color: #81c784;
+      color: white;
+    }
+    .bingo-cell.free {
+      background-color: #4caf50;
+      color: white;
+      font-weight: bold;
+    }
+    .drawn-numbers {
+      margin-bottom: 20px;
+      font-size: 16px;
+      min-height: 30px;
+    }
+    .call-bingo-btn {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Fast 75 Bingo</h2>
+  <div class="wallet-stake">Wallet: 100 ETB | Stake: 25 ETB</div>
+
+  <div class="drawn-numbers" id="drawnNumbers">Drawn: </div>
+
+  <div class="bingo-grid" id="bingoGrid"></div>
+
+  <button class="call-bingo-btn" onclick="alert('Bingo called! We will verify your card.')">Call Bingo</button>
+
+  <script>
+    // Generate a simple bingo card
+    function generateBingoCard() {
+      const grid = [];
+      for (let col = 0; col < 5; col++) {
+        const start = col * 15 + 1;
+        const numbers = Array.from({ length: 15 }, (_, i) => start + i);
+        for (let i = numbers.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+        }
+        grid.push(numbers.slice(0, 5));
+      }
+      grid[2][2] = "FREE";
+      return grid;
+    }
+
+    const bingoGrid = document.getElementById("bingoGrid");
+    const drawnNumbersDiv = document.getElementById("drawnNumbers");
+    const card = generateBingoCard();
+    const drawn = [];
+    const allNumbers = Array.from({ length: 75 }, (_, i) => i + 1);
+
+    function drawCard() {
+      bingoGrid.innerHTML = '';
+      for (let row = 0; row < 5; row++) {
+        for (let col = 0; col < 5; col++) {
+          const val = card[col][row];
+          const cell = document.createElement('div');
+          cell.className = 'bingo-cell';
+          if (val === 'FREE') {
+            cell.classList.add('free');
+            cell.textContent = 'FREE';
+          } else {
+            cell.textContent = val;
+            cell.addEventListener('click', () => {
+              cell.classList.toggle('highlight');
+            });
+          }
+          bingoGrid.appendChild(cell);
+        }
+      }
+    }
+
+    function drawNextNumber() {
+      if (allNumbers.length === 0) return;
+      const index = Math.floor(Math.random() * allNumbers.length);
+      const number = allNumbers.splice(index, 1)[0];
+      drawn.push(number);
+      drawnNumbersDiv.textContent = 'Drawn: ' + drawn.join(', ');
+    }
+
+    drawCard();
+    setInterval(drawNextNumber, 2000);
+  </script>
+
+</body>
+</html>
